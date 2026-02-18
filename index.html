@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Diagnóstico de arquitectura por casos de estudio</title>
+    <style>
+      :root {
+        --brand-green: #26c16a;
+        --brand-green-soft: #e8f7ef;
+        --brand-blue: #1f3b63;
+        --brand-blue-soft: #f2f6fb;
+        --brand-accent: #f7a336;
+        --border: #d7e1ea;
+        --text: #17324d;
+        --muted: #5b6f86;
+        --ok: #1f9d55;
+        --warn: #d97706;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: var(--text);
+        background: #eef1f4;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        background: #f6f8fa;
+        border-right: 2px solid #e1e8ef;
+        padding: 26px 18px;
+      }
+
+      .logo {
+        width: 190px;
+        aspect-ratio: 1;
+        border: 3px solid var(--brand-green);
+        border-radius: 50%;
+        margin: 0 auto 30px;
+        display: grid;
+        place-items: center;
+        color: var(--brand-blue);
+        text-align: center;
+        font-weight: 700;
+        background: white;
+      }
+
+      .logo small {
+        display: block;
+        color: var(--muted);
+        font-weight: 500;
+        font-size: 0.76rem;
+      }
+
+      nav a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #354a64;
+        text-decoration: none;
+        font-size: 1.12rem;
+        font-weight: 600;
+        padding: 14px 14px;
+        border-radius: 10px;
+        margin-bottom: 7px;
+      }
+
+      nav a.active {
+        background: rgba(38, 193, 106, 0.16);
+        color: #185b3d;
+        border-left: 6px solid var(--brand-green);
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+
+      main {
+        padding: 36px;
+      }
+
+      .card {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-left: 5px solid var(--brand-green);
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 10px 24px rgba(16, 47, 74, 0.08);
+      }
+
+      h1 {
+        margin: 0 0 14px;
+        color: #125f39;
+        font-size: clamp(1.45rem, 2vw, 2rem);
+      }
+
+      h2 {
+        margin: 30px 0 10px;
+        font-size: 1.75rem;
+        color: var(--brand-blue);
+      }
+
+      h3 {
+        margin: 25px 0 10px;
+        color: var(--brand-blue);
+      }
+
+      p,
+      li {
+        line-height: 1.5;
+      }
+
+      .meta {
+        font-size: 1.25rem;
+      }
+
+      .pill {
+        display: inline-block;
+        background: var(--brand-blue-soft);
+        border: 1px solid #ccd9ea;
+        border-radius: 999px;
+        padding: 6px 12px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        color: var(--brand-blue);
+        font-weight: 600;
+      }
+
+      .case-grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .case {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .case > button {
+        all: unset;
+        cursor: pointer;
+        width: 100%;
+        padding: 14px 16px;
+        font-size: 1.14rem;
+        font-weight: 700;
+        color: var(--brand-blue);
+        background: linear-gradient(90deg, #f7fbff, #f2fff8);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .case-content {
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+      }
+
+      label {
+        font-weight: 700;
+        display: grid;
+        gap: 6px;
+      }
+
+      select,
+      textarea,
+      input {
+        width: 100%;
+        border: 1px solid #becfe0;
+        border-radius: 10px;
+        padding: 10px;
+        font: inherit;
+      }
+
+      textarea {
+        min-height: 86px;
+        resize: vertical;
+      }
+
+      .btn {
+        background: var(--brand-green);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 18px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .btn.secondary {
+        background: var(--brand-blue);
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .feedback {
+        border-radius: 10px;
+        padding: 11px;
+        font-size: 0.96rem;
+      }
+
+      .feedback.ok {
+        background: #ecfdf3;
+        border: 1px solid #b7ebcb;
+        color: #1d6b42;
+      }
+
+      .feedback.warn {
+        background: #fff8eb;
+        border: 1px solid #f6dcaa;
+        color: #8b5c11;
+      }
+
+      details {
+        border-top: 1px dashed #c8d5e4;
+        padding-top: 10px;
+      }
+
+      details summary {
+        cursor: pointer;
+        color: #244c79;
+        font-weight: 700;
+      }
+
+      .footer-note {
+        margin-top: 30px;
+        background: var(--brand-green-soft);
+        border: 1px solid #bde8cf;
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          border-right: none;
+          border-bottom: 2px solid #e1e8ef;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="logo">
+          CINTIA
+          <small>Diagnóstico de Arquitectura</small>
+        </div>
+        <nav>
+          <a href="#">🚀 Introducción</a>
+          <a href="#">🎯 Objetivos</a>
+          <a href="#">📚 Contenido</a>
+          <a class="active" href="#actividad">✍️ Actividades</a>
+          <a href="#">✔️ Evaluación</a>
+          <a href="#">📖 Recursos</a>
+          <a href="#">📚 Bibliografía</a>
+        </nav>
+      </aside>
+
+      <main>
+        <section class="card" id="actividad">
+          <h1>✍️ “Diagnóstico de arquitectura por casos de estudio”</h1>
+          <p class="meta">
+            <strong>Propósito:</strong> Que el estudiante identifique, a partir de necesidades reales, cuál arquitectura conviene implementar (Monolítica, Cliente–Servidor, Multicapa, SOA) y sustente su elección con criterios técnicos.
+          </p>
+          <p class="meta"><strong>Modalidad:</strong> Individual o en parejas.</p>
+
+          <h3>Instrucciones</h3>
+          <ol>
+            <li>Lee cada caso y elige una arquitectura: Monolítica / Cliente–Servidor / Multicapa / SOA.</li>
+            <li>Justifica tu elección con mínimo 3 criterios (por ejemplo: número de usuarios, escalabilidad, mantenimiento, etc.).</li>
+            <li>Indica un riesgo de tu elección y una mitigación (cómo lo reducirías).</li>
+          </ol>
+
+          <div>
+            <span class="pill">Monolítica</span>
+            <span class="pill">Cliente–Servidor</span>
+            <span class="pill">Multicapa</span>
+            <span class="pill">SOA</span>
+          </div>
+
+          <h2>Casos de estudio</h2>
+          <p>💡 <strong>Pista:</strong> Escoge una arquitectura por caso y justifica. Al final, pulsa <em>Revisar actividad</em> para obtener retroalimentación.</p>
+
+          <div id="cases" class="case-grid"></div>
+
+          <div class="actions" style="margin-top: 20px">
+            <button id="reviewAll" class="btn">Revisar actividad</button>
+            <button id="clearAll" class="btn secondary">Limpiar respuestas</button>
+          </div>
+
+          <div id="globalFeedback" class="feedback warn" style="margin-top: 14px; display: none"></div>
+
+          <div class="footer-note">
+            <strong>Tip de tecnólogo:</strong> argumentar bien una arquitectura no es “adivinar la correcta”, sino demostrar que entiendes restricciones, riesgos y evolución del sistema.
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const caseData = [
+        {
+          title: "Caso 1: Cafetería del campus",
+          text: "Una cafetería necesita registrar productos, ventas diarias y cierres de caja. Solo lo usarán 2 personas en 1 computador. No hay acceso externo ni integraciones. Cambios muy ocasionales.",
+          hint: "Sugerida: Monolítica. Es un escenario pequeño, acotado y de baja complejidad operativa."
+        },
+        {
+          title: "Caso 2: Turnos para atención en ventanilla",
+          text: "Una oficina requiere una consola para asignar turnos y una pantalla para mostrarlos. Debe guardar historial diario y generar reportes semanales. Se usará en 3 puntos de atención del mismo edificio.",
+          hint: "Sugerida: Cliente–Servidor. Varios puntos consumiendo un servicio central de datos y turnos."
+        },
+        {
+          title: "Caso 3: Pedidos para restaurante (móvil + panel interno)",
+          text: "Clientes hacen pedidos desde una app móvil. Cocina y caja usan un panel web interno. Debe manejar autenticación, estados del pedido y registro de ventas en base de datos. Se espera crecer a 2 sedes en 6 meses.",
+          hint: "Sugerida: Multicapa. Separa presentación, lógica de negocio y datos para escalar y mantener mejor."
+        },
+        {
+          title: "Caso 4: Sistema académico con reglas",
+          text: "Sistema para matrículas, notas, asistencia, boletines y reportes. Hay reglas (prerrequisitos, rangos de calificación, permisos por rol). Cambios frecuentes por ajustes internos del instituto.",
+          hint: "Sugerida: Multicapa. Facilita encapsular reglas de negocio y cambios frecuentes."
+        },
+        {
+          title: "Caso 5: Portal institucional por módulos",
+          text: "Una universidad quiere un portal único con módulos: admisiones, biblioteca, bienestar y egresados. Deben compartir usuarios/roles, pero cada módulo evoluciona a ritmos distintos. El equipo quiere trabajar por módulos sin “romper” el resto.",
+          hint: "Sugerida: SOA. Permite módulos desacoplados con contratos de servicio y evolución independiente."
+        },
+        {
+          title: "Caso 6: Integración de sistemas (legacy + nuevos)",
+          text: "Una empresa ya tiene inventario (antiguo), contabilidad (ERP) y un nuevo sistema de ventas. Necesitan unificar consulta de clientes/productos sin duplicar datos, y permitir que los sistemas intercambien información con contratos claros.",
+          hint: "Sugerida: SOA. Ideal para integrar sistemas heterogéneos con contratos y servicios estables."
+        },
+        {
+          title: "Caso 7: Servicios compartidos institucionales",
+          text: "Varias aplicaciones deben consumir servicios centrales: autenticación, notificaciones y pagos. Se exige control de versiones, monitoreo y reglas claras para cambios sin afectar a las aplicaciones consumidoras.",
+          hint: "Sugerida: SOA. Enfoca reutilización, gobernanza y versionado de servicios compartidos."
+        },
+        {
+          title: "Caso 8: Interoperabilidad entre organizaciones",
+          text: "Dos instituciones necesitan intercambiar información (por ejemplo, estudiantes/prácticas). Cada una mantiene su base de datos. Se requiere seguridad, auditoría, trazabilidad y acuerdos estandarizados de intercambio.",
+          hint: "Sugerida: SOA. Favorece interoperabilidad formal entre organizaciones con contratos y seguridad."
+        }
+      ];
+
+      const architectureOptions = ["", "Monolítica", "Cliente–Servidor", "Multicapa", "SOA"];
+
+      function createCase(caseItem, index) {
+        const wrapper = document.createElement("article");
+        wrapper.className = "case";
+
+        wrapper.innerHTML = `
+          <button type="button" aria-expanded="true">${caseItem.title}</button>
+          <div class="case-content">
+            <p>${caseItem.text}</p>
+            <label>
+              Arquitectura elegida
+              <select data-field="arch">
+                ${architectureOptions.map((op) => `<option value="${op}">${op || "Selecciona una opción"}</option>`).join("")}
+              </select>
+            </label>
+            <label>
+              Criterios técnicos (mínimo 3, separados por coma)
+              <input data-field="criteria" placeholder="Ej: usuarios concurrentes, mantenimiento, costo" />
+            </label>
+            <label>
+              Riesgo principal de tu elección
+              <textarea data-field="risk" placeholder="Describe un riesgo real del diseño elegido..."></textarea>
+            </label>
+            <label>
+              Mitigación propuesta
+              <textarea data-field="mitigation" placeholder="¿Cómo reducirías ese riesgo?"></textarea>
+            </label>
+            <div data-feedback class="feedback warn" style="display:none"></div>
+            <details>
+              <summary>Ver retroalimentación orientadora</summary>
+              <p>${caseItem.hint}</p>
+            </details>
+          </div>
+        `;
+
+        const toggleBtn = wrapper.querySelector("button");
+        const content = wrapper.querySelector(".case-content");
+        toggleBtn.addEventListener("click", () => {
+          const isHidden = content.style.display === "none";
+          content.style.display = isHidden ? "grid" : "none";
+          toggleBtn.setAttribute("aria-expanded", String(isHidden));
+        });
+
+        return wrapper;
+      }
+
+      function evaluateCase(caseElement) {
+        const arch = caseElement.querySelector('[data-field="arch"]').value;
+        const criteriaRaw = caseElement.querySelector('[data-field="criteria"]').value;
+        const risk = caseElement.querySelector('[data-field="risk"]').value.trim();
+        const mitigation = caseElement.querySelector('[data-field="mitigation"]').value.trim();
+        const feedback = caseElement.querySelector("[data-feedback]");
+
+        const criteriaCount = criteriaRaw
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean).length;
+
+        const msgs = [];
+        let score = 0;
+
+        if (arch) {
+          msgs.push("✅ Seleccionaste una arquitectura.");
+          score++;
+        } else {
+          msgs.push("⚠️ Debes escoger una arquitectura para este caso.");
+        }
+
+        if (criteriaCount >= 3) {
+          msgs.push(`✅ Incluiste ${criteriaCount} criterios técnicos.`);
+          score++;
+        } else {
+          msgs.push("⚠️ Te faltan criterios: incluye al menos 3 separados por coma.");
+        }
+
+        if (risk.length >= 20) {
+          msgs.push("✅ Riesgo planteado con nivel aceptable de detalle.");
+          score++;
+        } else {
+          msgs.push("⚠️ El riesgo es muy corto; intenta hacerlo más específico.");
+        }
+
+        if (mitigation.length >= 20) {
+          msgs.push("✅ Mitigación planteada con acciones concretas.");
+          score++;
+        } else {
+          msgs.push("⚠️ La mitigación debe explicar cómo reducirás el riesgo.");
+        }
+
+        feedback.style.display = "block";
+        feedback.className = `feedback ${score >= 3 ? "ok" : "warn"}`;
+        feedback.innerHTML = `<strong>Retroalimentación rápida:</strong><br>${msgs.join("<br>")}`;
+
+        return score;
+      }
+
+      const casesContainer = document.getElementById("cases");
+      caseData.forEach((item, idx) => casesContainer.appendChild(createCase(item, idx)));
+
+      document.getElementById("reviewAll").addEventListener("click", () => {
+        const caseElements = [...document.querySelectorAll(".case")];
+        const scores = caseElements.map(evaluateCase);
+        const total = scores.reduce((a, b) => a + b, 0);
+        const max = caseElements.length * 4;
+        const percentage = Math.round((total / max) * 100);
+
+        const global = document.getElementById("globalFeedback");
+        global.style.display = "block";
+        global.className = `feedback ${percentage >= 75 ? "ok" : "warn"}`;
+        global.innerHTML =
+          percentage >= 75
+            ? `¡Buen trabajo! Alcanzaste <strong>${total}/${max}</strong> puntos (${percentage}%). Revisa los casos con observaciones para fortalecer argumentos técnicos.`
+            : `Vas en <strong>${total}/${max}</strong> puntos (${percentage}%). Completa criterios técnicos y mejora riesgos/mitigaciones para subir tu nivel.`;
+      });
+
+      document.getElementById("clearAll").addEventListener("click", () => {
+        document.querySelectorAll("select").forEach((s) => (s.value = ""));
+        document.querySelectorAll("input, textarea").forEach((f) => (f.value = ""));
+        document.querySelectorAll("[data-feedback]").forEach((f) => (f.style.display = "none"));
+        const global = document.getElementById("globalFeedback");
+        global.style.display = "none";
+      });
+    </script>
+  </body>
+</html>
